@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -32,19 +33,22 @@ public class MainActivity extends AppCompatActivity {
 
         ViewCompat.setOnApplyWindowInsetsListener(
                 findViewById(R.id.main), (v, insets) -> {
+
                     Insets bars = insets.getInsets(
                             WindowInsetsCompat.Type.systemBars()
                     );
+
                     v.setPadding(
                             bars.left,
                             bars.top,
                             bars.right,
                             bars.bottom
                     );
+
                     return insets;
                 });
 
-        // Ánh xạ các thành phần giao diện
+        // Ánh xạ giao diện
         edtSoA = findViewById(R.id.edtSoA);
         edtSoB = findViewById(R.id.edtSoB);
         tvKetQua = findViewById(R.id.tvKetQua);
@@ -61,16 +65,22 @@ public class MainActivity extends AppCompatActivity {
         Button btnXoa = findViewById(R.id.btnXoa);
         Button btnTinhBmi = findViewById(R.id.btnTinhBmi);
 
-        // Cách 1: mỗi nút sử dụng một listener
+        // Hai nút của NC1
+        Button btnPhanTram = findViewById(R.id.btnPhanTram);
+        Button btnDaoDau = findViewById(R.id.btnDaoDau);
+
+        // Cộng và trừ
         btnCong.setOnClickListener(v -> tinhToan('+'));
         btnTru.setOnClickListener(v -> tinhToan('-'));
 
-        // Cách 2: nút Nhân và Chia dùng chung listener
+        // Nhân và chia dùng chung listener
         View.OnClickListener chung = v -> {
+
             int id = v.getId();
 
             if (id == R.id.btnNhan) {
                 tinhToan('*');
+
             } else if (id == R.id.btnChia) {
                 tinhToan('/');
             }
@@ -79,11 +89,13 @@ public class MainActivity extends AppCompatActivity {
         btnNhan.setOnClickListener(chung);
         btnChia.setOnClickListener(chung);
 
-        // Xóa trắng
         btnXoa.setOnClickListener(v -> xoaTrang());
 
-        // Tính BMI
         btnTinhBmi.setOnClickListener(v -> tinhBmi());
+
+        // NC1
+        btnPhanTram.setOnClickListener(v -> tinhPhanTram());
+        btnDaoDau.setOnClickListener(v -> daoDau());
     }
 
     // ================= MÁY TÍNH =================
@@ -93,32 +105,44 @@ public class MainActivity extends AppCompatActivity {
         String chuoiA = edtSoA.getText().toString().trim();
         String chuoiB = edtSoB.getText().toString().trim();
 
-        // Kiểm tra ô A có bị trống không
+        // Kiểm tra ô A
         if (chuoiA.isEmpty()) {
-            edtSoA.setError(getString(R.string.err_empty));
+
+            edtSoA.setError(
+                    getString(R.string.err_empty)
+            );
+
             edtSoA.requestFocus();
             return;
         }
 
-        // Kiểm tra ô B có bị trống không
+        // Kiểm tra ô B
         if (chuoiB.isEmpty()) {
-            edtSoB.setError(getString(R.string.err_empty));
+
+            edtSoB.setError(
+                    getString(R.string.err_empty)
+            );
+
             edtSoB.requestFocus();
             return;
         }
 
         double a, b;
 
-        // Chuyển dữ liệu nhập thành số
+        // Kiểm tra định dạng số
         try {
+
             a = Double.parseDouble(chuoiA);
             b = Double.parseDouble(chuoiB);
 
         } catch (NumberFormatException e) {
 
-            Log.e(TAG,
+            Log.e(
+                    TAG,
                     "Dữ liệu nhập không phải số: '"
-                            + chuoiA + "', '" + chuoiB + "'", e);
+                            + chuoiA + "', '" + chuoiB + "'",
+                    e
+            );
 
             Toast.makeText(
                     this,
@@ -147,7 +171,6 @@ public class MainActivity extends AppCompatActivity {
 
         double ketQua;
 
-        // Thực hiện phép tính
         switch (phepToan) {
 
             case '+':
@@ -167,24 +190,113 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
 
-        // Hiển thị kết quả
         tvKetQua.setText(
                 String.format(
                         Locale.getDefault(),
                         "%.2f %c %.2f = %.2f",
-                        a, phepToan, b, ketQua
+                        a,
+                        phepToan,
+                        b,
+                        ketQua
                 )
         );
 
         Log.d(
                 TAG,
-                "Phép tính: " + a + " "
+                "Phép tính: "
+                        + a + " "
                         + phepToan + " "
-                        + b + " = " + ketQua
+                        + b + " = "
+                        + ketQua
         );
     }
 
-    // Xóa dữ liệu máy tính
+    // ================= NC1 =================
+
+    // Tính phần trăm của số ở ô A
+    private void tinhPhanTram() {
+
+        String chuoiA =
+                edtSoA.getText().toString().trim();
+
+        if (chuoiA.isEmpty()) {
+
+            edtSoA.setError(
+                    getString(R.string.err_empty)
+            );
+
+            edtSoA.requestFocus();
+            return;
+        }
+
+        try {
+
+            double a =
+                    Double.parseDouble(chuoiA);
+
+            double ketQua = a / 100.0;
+
+            edtSoA.setText(
+                    String.format(
+                            Locale.getDefault(),
+                            "%.2f",
+                            ketQua
+                    )
+            );
+
+        } catch (NumberFormatException e) {
+
+            Toast.makeText(
+                    this,
+                    R.string.err_not_number,
+                    Toast.LENGTH_SHORT
+            ).show();
+        }
+    }
+
+    // Đảo dấu số ở ô A
+    private void daoDau() {
+
+        String chuoiA =
+                edtSoA.getText().toString().trim();
+
+        if (chuoiA.isEmpty()) {
+
+            edtSoA.setError(
+                    getString(R.string.err_empty)
+            );
+
+            edtSoA.requestFocus();
+            return;
+        }
+
+        try {
+
+            double a =
+                    Double.parseDouble(chuoiA);
+
+            a = a * -1;
+
+            edtSoA.setText(
+                    String.format(
+                            Locale.getDefault(),
+                            "%.2f",
+                            a
+                    )
+            );
+
+        } catch (NumberFormatException e) {
+
+            Toast.makeText(
+                    this,
+                    R.string.err_not_number,
+                    Toast.LENGTH_SHORT
+            ).show();
+        }
+    }
+
+    // ================= XÓA TRẮNG =================
+
     private void xoaTrang() {
 
         edtSoA.setText("");
@@ -193,7 +305,9 @@ public class MainActivity extends AppCompatActivity {
         edtSoA.setError(null);
         edtSoB.setError(null);
 
-        tvKetQua.setText(R.string.result_placeholder);
+        tvKetQua.setText(
+                R.string.result_placeholder
+        );
 
         edtSoA.requestFocus();
     }
@@ -205,14 +319,20 @@ public class MainActivity extends AppCompatActivity {
         try {
 
             double canNang = Double.parseDouble(
-                    edtCanNang.getText().toString().trim()
+                    edtCanNang
+                            .getText()
+                            .toString()
+                            .trim()
             );
 
             double chieuCao = Double.parseDouble(
-                    edtChieuCao.getText().toString().trim()
+                    edtChieuCao
+                            .getText()
+                            .toString()
+                            .trim()
             );
 
-            // Cân nặng và chiều cao phải lớn hơn 0
+            // Kiểm tra cân nặng và chiều cao
             if (canNang <= 0 || chieuCao <= 0) {
 
                 Toast.makeText(
@@ -224,8 +344,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            // Nếu nhập 170 thì hiểu là 170 cm
-            // và chuyển thành 1.70 m
+            // Cho phép nhập 1.70 m hoặc 170 cm
             if (chieuCao > 3) {
                 chieuCao = chieuCao / 100.0;
             }
@@ -241,11 +360,21 @@ public class MainActivity extends AppCompatActivity {
                     )
             );
 
-            tvPhanLoai.setText(phanLoai(bmi));
+            // Hiển thị phân loại
+            tvPhanLoai.setText(
+                    phanLoai(bmi)
+            );
+
+            // NC3 - đổi màu theo BMI
+            doiMauBmi(bmi);
 
         } catch (NumberFormatException e) {
 
-            Log.e(TAG, "Lỗi nhập liệu BMI", e);
+            Log.e(
+                    TAG,
+                    "Lỗi nhập liệu BMI",
+                    e
+            );
 
             Toast.makeText(
                     this,
@@ -271,5 +400,42 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return getString(R.string.bmi_obese);
+    }
+
+    // ================= NC3 =================
+
+    // Đổi màu dòng phân loại BMI
+    private void doiMauBmi(double bmi) {
+
+        if (bmi < 23) {
+
+            // Thiếu cân và bình thường: màu xanh
+            tvPhanLoai.setTextColor(
+                    ContextCompat.getColor(
+                            this,
+                            R.color.bmi_normal
+                    )
+            );
+
+        } else if (bmi < 25) {
+
+            // Thừa cân: màu vàng
+            tvPhanLoai.setTextColor(
+                    ContextCompat.getColor(
+                            this,
+                            R.color.bmi_over
+                    )
+            );
+
+        } else {
+
+            // Béo phì: màu đỏ
+            tvPhanLoai.setTextColor(
+                    ContextCompat.getColor(
+                            this,
+                            R.color.bmi_obese
+                    )
+            );
+        }
     }
 }
